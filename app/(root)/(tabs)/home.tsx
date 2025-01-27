@@ -1,7 +1,9 @@
+import GoogleTextInput from "@/components/GoogleTextInput";
 import RideCard from "@/components/RideCard";
+import Map from "@/components/Map";
 import { icons, images } from "@/constants";
-import { SignedIn, SignedOut, useAuth, useUser } from "@clerk/clerk-expo";
-import { Link, router } from "expo-router";
+import { useAuth, useUser } from "@clerk/clerk-expo";
+import { router } from "expo-router";
 import {
   ActivityIndicator,
   FlatList,
@@ -11,16 +13,48 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useLocationStore } from "@/store";
+import { useEffect, useState } from "react";
+import * as Location from "expo-location";
 
 export default function Page() {
+  const { setUserLocation, setDestinationLocation } = useLocationStore();
   const { user } = useUser();
   const { signOut } = useAuth();
   const loading = false;
+
+  const [hasPermission, setHasPermission] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
     router.replace("/(auth)/sign-in");
   };
+
+  const handleDestinationPress = () => {};
+
+  useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+
+      if (status !== "granted") {
+        setHasPermission(false);
+        return;
+      }
+
+      let location = await Location.getCurrentPositionAsync({});
+
+      const address = await Location.reverseGeocodeAsync({
+        latitude: location.coords?.latitude!,
+        longitude: location.coords?.longitude!,
+      });
+
+      setUserLocation({
+        latitude: location.coords?.latitude!,
+        longitude: location.coords?.longitude!,
+        address: `${address[0].name}, ${address[0].region}`,
+      });
+    })();
+  }, []);
 
   const mockRides = [
     {
@@ -132,7 +166,7 @@ export default function Page() {
   return (
     <SafeAreaView>
       <FlatList
-        data={mockRides?.slice(0, 3)}
+        data={mockRides?.slice(0, 5)}
         renderItem={({ item }) => <RideCard ride={item} />}
         keyExtractor={(item, index) => index.toString()}
         className="px-5"
@@ -159,7 +193,7 @@ export default function Page() {
           <>
             <View className="flex flex-row items-center justify-between my-5">
               <Text className="text-2xl font-JakartaExtraBold">
-                Welcome {user?.firstName}👋
+                Welcome TK👋
               </Text>
               <TouchableOpacity
                 onPress={handleSignOut}
@@ -169,16 +203,18 @@ export default function Page() {
               </TouchableOpacity>
             </View>
 
-            <Text className="text-xl font-JakartaBold mt-5 mb-3">
-              Google Text
-            </Text>
+            <GoogleTextInput
+              icon={icons.search}
+              containerStyle="bg-white shadow-md shadow-neutral-300"
+              handlePress={handleDestinationPress}
+            />
 
             <>
               <Text className="text-xl font-JakartaBold mt-5 mb-3">
                 Your current location
               </Text>
               <View className="flex flex-row items-center bg-transparent h-[300px]">
-                <Text>Map</Text>
+                <Map />
               </View>
             </>
 
