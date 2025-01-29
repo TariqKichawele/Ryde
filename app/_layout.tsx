@@ -4,6 +4,7 @@ import "./globals.css";
 import { useEffect } from "react";
 import { ClerkLoaded, ClerkProvider } from "@clerk/clerk-expo";
 import { tokenCache } from "@/lib/auth";
+import { LogBox } from "react-native";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -12,6 +13,8 @@ const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 if (!publishableKey) {
   throw new Error("Missing Clerk publishable key");
 }
+
+LogBox.ignoreLogs(["Warning: ..."]);
 
 export default function RootLayout() {
   const [loaded] = useFonts({

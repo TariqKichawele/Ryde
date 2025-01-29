@@ -12,9 +12,8 @@ const OAuth = () => {
   const handleGoogleSignIn = async () => {
     const res = await googleOAuth(startOAuthFlow);
 
-    if (res.code === "session_exists") {
-      Alert.alert("Success", "Session exists. Redirecting to home.");
-      router.replace("/(root)/(tabs)/home");
+    if (res.code === "session_exists" || res.code === "success") {
+      router.push("/(root)/(tabs)/home");
     }
 
     Alert.alert(res.success ? "Success" : "Error", res.message);
